@@ -1,30 +1,43 @@
+use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
 fn main() {
-    let handle = thread::spawn(|| {
-    	for i in 1..10 {
-        	println!("hola {} desde el primer hilo", i);
-        	thread::sleep(Duration::from_millis(10));
+
+	let (tx, rx) = mpsc::channel();
+
+	let tx1 = mpsc::Sender::clone(&tx);
+	thread::spawn(move || {
+    	let vals = vec![
+        	String::from("hola"),
+        	String::from("desde"),
+        	String::from("el"),
+        	String::from("hilo 1"),
+    	];
+
+    	for val in vals {
+        	tx1.send(val).unwrap();
+        	thread::sleep(Duration::from_secs(1));
     	}
 	});
 
-	let handle1 = thread::spawn(|| {
-    	for i in 1..10 {
-        	println!("hola {} desde el segundo hilo", i);
-        	thread::sleep(Duration::from_millis(10));
-    	}
-	});
-    
-	let handle2 = thread::spawn(|| {
-    	for i in 1..10 {
-        	println!("hola {} desde el tercer hilo", i);
-        	thread::sleep(Duration::from_millis(10));
+	thread::spawn(move || {
+    	let vals = vec![
+        	String::from("vemos"),
+        	String::from("como "),
+        	String::from("trabaja"),
+        	String::from("hilo 2"),
+    	];
+
+    	for val in vals {
+        	tx.send(val).unwrap();
+        	thread::sleep(Duration::from_secs(1));
     	}
 	});
 
-    handle.join().unwrap();
-    handle1.join().unwrap();
-    handle2.join().unwrap();
+	for received in rx {
+    	println!("Obetener mensaje {}", received);
+	}
+
 }
 
